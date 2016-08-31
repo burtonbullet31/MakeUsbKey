@@ -1,0 +1,5 @@
+﻿<make_usb>
+  <volumelabel>REWORK_V3</volumelabel>
+  <defaultpath>USB_Img</defaultpath>
+  <editdefaultpath>false</editdefaultpath>
+</make_usb>

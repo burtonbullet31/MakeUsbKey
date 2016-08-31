@@ -1,0 +1,19 @@
+﻿<Window x:Class="Make_USB_Key.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Make_USB_Key"
+        mc:Ignorable="d"
+        Title="Basic USB Key Maker" Height="157.333" Width="403.667" ResizeMode="NoResize">
+    <Grid>
+        <Label x:Name="label1" Content="1) Select _drive to format and build:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+        <ComboBox x:Name="DestinationComboBox" HorizontalAlignment="Left" Margin="203,10,0,0" VerticalAlignment="Top" Width="163"/>
+        <Label x:Name="label1_Copy" Content="2) Custom path if different:" HorizontalAlignment="Left" Margin="10,41,0,0" VerticalAlignment="Top"/>
+        <Button x:Name="BeginButton" Content="_Begin" HorizontalAlignment="Left" Margin="10,84,0,0" VerticalAlignment="Top" Width="75" Click="BeginButton_Click"/>
+        <Button x:Name="ExitButton" Content="E_xit" HorizontalAlignment="Left" Margin="291,84,0,0" VerticalAlignment="Top" Width="75" Click="ExitButton_Click"/>
+        <Button x:Name="PathButton" Content="..." HorizontalAlignment="Left" Margin="342,44,0,0" VerticalAlignment="Top" Width="24" Height="23" Click="PathButton_Click"/>
+        <TextBox x:Name="SourceTextBox" HorizontalAlignment="Left" Height="23" Margin="167,44,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="170"/>
+        <Button x:Name="RefreshDrivesButton" Content="Refresh" HorizontalAlignment="Left" Margin="211,84,0,0" VerticalAlignment="Top" Width="75" Click="ResetButton_Click"/>
+    </Grid>
+</Window>
