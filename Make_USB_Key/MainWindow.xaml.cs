@@ -174,9 +174,6 @@ namespace Make_USB_Key
                             }
                             catch { }
 
-                            if (Label == null || Label == "")
-                                break;
-
                             DrivePlusVolume += " " + Label;
 
                             DestinationComboBox.Items.Add(DrivePlusVolume);
