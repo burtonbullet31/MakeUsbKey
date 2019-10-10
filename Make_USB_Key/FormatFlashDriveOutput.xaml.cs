@@ -56,31 +56,31 @@ namespace Make_USB_Key
         public string NewVolumeName { get; set; }
         public string SourceFolder { get; set; }
         public string OrigSource { get; set; }
-        WebClient FileWebClient = null;
-        bool WaitForCopy = false;
-        private Thread WorkThread = null;
-        string Mess = "";
-        object MessageBaton = new object();
-        private bool ThreadAlive { get { if (WorkThread == null) return false; else return WorkThread.IsAlive; } }
+        private readonly WebClient _fileWebClient = null;
+        private bool _waitForCopy = false;
+        private Thread _workThread = null;
+        private string _mess = "";
+        private readonly object _messageBaton = new object();
+        private bool ThreadAlive { get { if (_workThread == null) return false; else return _workThread.IsAlive; } }
         
         //ConsoleContent ConsoleOut = new ConsoleContent();
 
-        public FormatFlashDriveOutput(string DriveLetter, string Source, string origsource, string Volume = "")
+        public FormatFlashDriveOutput(string driveLetter, string source, string origSource, string volume = "")
         {
             InitializeComponent();
-            SourceFolder = Source;
-            NewVolumeName = Volume;
-            OrigSource = origsource;
+            SourceFolder = source;
+            NewVolumeName = volume;
+            OrigSource = origSource;
             //DataContext = ConsoleOut;
-            this.DriveLetter = DriveLetter;
+            this.DriveLetter = driveLetter;
             DriveLetterTextBox.Text = this.DriveLetter;
-            FileWebClient = new WebClient();
+            _fileWebClient = new WebClient();
 
             FileProgress.Maximum = 100;
             FileProgress.Minimum = 0;
             FileProgress.Value = 0;
-            FileWebClient.DownloadProgressChanged += new DownloadProgressChangedEventHandler(ProgressChanged);
-            FileWebClient.DownloadFileCompleted += new AsyncCompletedEventHandler(Completed);
+            _fileWebClient.DownloadProgressChanged += new DownloadProgressChangedEventHandler(ProgressChanged);
+            _fileWebClient.DownloadFileCompleted += new AsyncCompletedEventHandler(Completed);
             
             Loaded += Start;
         }
@@ -88,24 +88,24 @@ namespace Make_USB_Key
         public void Start(object j = null, EventArgs e = null)
         {
             Show();
-            AddMessage("Initializzing...");
+            AddMessage("Initializing...");
             AddMessage("");
 
             if (!System.IO.Directory.Exists(SourceFolder))
             {
                 OutputWindow.Items.Add(OutBox(""));
 
-                TextBlock Block = new TextBlock();
-                Block.Text = "Directory \"" + SourceFolder + "\" does not exist!";
-                Block.Foreground = Brushes.Red;
+                TextBlock block = new TextBlock();
+                block.Text = "Directory \"" + SourceFolder + "\" does not exist!";
+                block.Foreground = Brushes.Red;
 
-                OutputWindow.Items.Add(Block);
+                OutputWindow.Items.Add(block);
                 return;
             }
 
-            WorkThread = new Thread(new ThreadStart(RunProcess));
-            WorkThread.SetApartmentState(ApartmentState.STA);
-            WorkThread.Start();
+            _workThread = new Thread(new ThreadStart(RunProcess));
+            _workThread.SetApartmentState(ApartmentState.STA);
+            _workThread.Start();
             
             OutputWindow.Items.Refresh();
         }
@@ -193,17 +193,17 @@ namespace Make_USB_Key
 
             foreach (string file in System.IO.Directory.EnumerateFiles(SourceFolder,"*.*",SearchOption.AllDirectories))
             {
-                WaitForCopy = true;
+                _waitForCopy = true;
 
                 string path = Path.GetDirectoryName(file).Substring((file.IndexOf(OrigSource)+OrigSource.Length));
 
-                FileWebClient.DownloadFileAsync(new Uri(file), Volume.Letter + ":" + path + "\\" + Path.GetFileName(file));
+                _fileWebClient.DownloadFileAsync(new Uri(file), Volume.Letter + ":" + path + "\\" + Path.GetFileName(file));
                 UpdateUIMessages("Copying file: " + file);
 
                 if (!System.IO.File.Exists(file))
                     UpdateUIMessages("FAILED TO FIND: " + Volume.Letter + ":" + path + "\\" + Path.GetFileName(file), true);
 
-                while (WaitForCopy)
+                while (_waitForCopy)
                     Thread.Sleep(25);
                 SetFileProgres();
                 if (!System.IO.File.Exists(Volume.Letter + ":" + path + "\\" + Path.GetFileName(file)))
@@ -281,15 +281,15 @@ namespace Make_USB_Key
         {
             UpdateUIThread UIMessenger = new UpdateUIThread(AddMessage);
 
-            lock (MessageBaton)
-                Dispatcher.Invoke(UIMessenger, Mess);
+            lock (_messageBaton)
+                Dispatcher.Invoke(UIMessenger, _mess);
         }
 
         private void UpdateUIMessages(string Input)
         {
             UpdateUIThread UIMessenger = new UpdateUIThread(AddMessage);
 
-            lock (MessageBaton)
+            lock (_messageBaton)
                 Dispatcher.Invoke(UIMessenger, Input);
         }
 
@@ -297,14 +297,14 @@ namespace Make_USB_Key
         {
             UpdateUIThreadFail UIMessenger = new UpdateUIThreadFail(AddMessage);
 
-            lock (MessageBaton)
+            lock (_messageBaton)
                 Dispatcher.Invoke(UIMessenger, Input, fail);
         }
 
         private void UpdateDriveLetter(string letter)
         {
             UpdateUIDriveLetter UILetter = new UpdateUIDriveLetter(UpdateLetter);
-            lock (MessageBaton)
+            lock (_messageBaton)
                 Dispatcher.Invoke(UILetter, letter);
         }
 
@@ -312,7 +312,7 @@ namespace Make_USB_Key
         {
             Closer UIClose = new Closer(CloseWindow);
 
-            lock (MessageBaton)
+            lock (_messageBaton)
                 Dispatcher.Invoke(UIClose);
         }
 
@@ -429,7 +429,7 @@ namespace Make_USB_Key
         internal void SetUIDialogResult()
         {
             UpdateUIDialogResult Prog = new UpdateUIDialogResult(UIDialogResult);
-            lock (MessageBaton)
+            lock (_messageBaton)
                 Dispatcher.Invoke(Prog);
         }
 
@@ -447,7 +447,7 @@ namespace Make_USB_Key
 
         private void Completed(object sender, AsyncCompletedEventArgs e)
         {
-            WaitForCopy = false;
+            _waitForCopy = false;
         }
     }
 }
