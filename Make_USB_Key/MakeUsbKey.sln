@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29409.12
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Make_USB_Key", "Make_USB_Key.csproj", "{F579D9DA-57DD-46A5-B12E-1C0C49BF23DB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MakeUsbKey", "MakeUsbKey.csproj", "{F579D9DA-57DD-46A5-B12E-1C0C49BF23DB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,12 +25,7 @@ Global
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 2
-		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
-		SccTeamFoundationServer = https://rjmusgrave.visualstudio.com/
-		SccLocalPath0 = .
-		SccProjectUniqueName1 = Make_USB_Key.csproj
-		SccLocalPath1 = .
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B5B9C069-09F3-419C-93EE-AC83FFF2C263}
 	EndGlobalSection
 EndGlobal

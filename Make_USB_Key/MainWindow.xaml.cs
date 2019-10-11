@@ -1,47 +1,48 @@
 ﻿using System;
 using System.Windows;
-using Make_USB_Key.ArgEngine;
 using System.Xml.Linq;
 using System.Management;
 using System.IO;
 using System.Windows.Forms;
+using MakeUsbKey.ArgEngine.Enumerations;
 
-namespace Make_USB_Key
+namespace MakeUsbKey
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
-        ArgEngine.ArgEngine CommandArguments = null;
-        bool Rerun { get; set; } = false;
+        private readonly ArgEngine.ArgEngine _commandArguments;
+        private bool Rerun { get; set; }
 
         public MainWindow()
         {
             InitializeComponent();
 
-            CommandArguments = new ArgEngine.ArgEngine(Environment.GetCommandLineArgs());
+            _commandArguments = new ArgEngine.ArgEngine(Environment.GetCommandLineArgs());
 
-            CommandArguments.SetArg(ARGS.VOLUME_LABEL, CommandArguments.GetArgValue(ARGS.VOLUME_LABEL));
+            _commandArguments.SetArg(Arg.VolumeLabel, _commandArguments.GetArgValue(Arg.VolumeLabel));
 
-            LoadXML();
+            LoadXml();
 
             Loaded += MainWindow_Loaded;
         }
 
-        private void LoadXML()
+        private void LoadXml()
         {
-            if (!System.IO.File.Exists("settings.xml")) return;
+            if (!File.Exists("settings.xml")) return;
 
-            XDocument doc = XDocument.Load("settings.xml");
-            XElement root = doc.Root;
+            var doc = XDocument.Load("settings.xml");
+            var root = doc.Root;
 
-            foreach(XElement element in root.Elements())
+            if (root == null) return;
+            foreach (var element in root.Elements())
             {
-                switch(element.Name.ToString())
+                switch (element.Name.ToString())
                 {
                     case "defaultpath":
-                        CommandArguments.SetArg(ARGS.SOURCE, element.Value);
+                        _commandArguments.SetArg(Arg.Source, element.Value);
                         SourceTextBox.Text = element.Value;
                         break;
                     case "editdefaultpath":
@@ -50,18 +51,16 @@ namespace Make_USB_Key
                             SourceTextBox.IsEnabled = false;
                             PathButton.IsEnabled = false;
                         }
+
                         break;
                     case "volumelabel":
-                        CommandArguments.SetArg(ARGS.VOLUME_LABEL, element.Value);
-                        break;
-                    default:
+                        _commandArguments.SetArg(Arg.VolumeLabel, element.Value);
                         break;
                 }
             }
-            
         }
 
-        private bool IsTrue(string value)
+        private static bool IsTrue(string value)
         {
             switch (value.ToLower())
             {
@@ -91,10 +90,10 @@ namespace Make_USB_Key
 
             Hide();
 
-            CommandArguments.SetArg(ARGS.SOURCE, SourceTextBox.Text);
-            CommandArguments.SetArg(ARGS.DESTINATION, ConvertDrive(DestinationComboBox.SelectedItem as string));
+            _commandArguments.SetArg(Arg.Source, SourceTextBox.Text);
+            _commandArguments.SetArg(Arg.Destination, ConvertDrive(DestinationComboBox.SelectedItem as string));
 
-            Rerun = FormatFlashDrive(ConvertDrive(DestinationComboBox.SelectedItem as string), SourceTextBox.Text, SourceTextBox.Text, CommandArguments.GetArgValue(ARGS.VOLUME_LABEL));
+            Rerun = FormatFlashDrive(ConvertDrive(DestinationComboBox.SelectedItem as string), SourceTextBox.Text, SourceTextBox.Text, _commandArguments.GetArgValue(Arg.VolumeLabel));
 
             if (!Rerun)
                 Close();
@@ -105,83 +104,68 @@ namespace Make_USB_Key
             }
         }
 
-        private string GetFullPath(string text)
+        private static string GetFullPath(string text)
         {
             if (RelativeSource(text))
             {
-                return (System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\" + text);
+                return (Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\" + text);
             }
             return text;
         }
 
-        private bool RelativeSource(string text)
+        private static bool RelativeSource(string text)
         {
-            if (text.Contains(":"))
-                return false;
-            return true;
+            return !text.Contains(":");
         }
 
-        private bool FormatFlashDrive(string path, string source, string origsource, string volume = "")
+        private static bool FormatFlashDrive(string path, string source, string origSource, string volume = "")
         {
-            FormatFlashDriveOutput Formatter = new FormatFlashDriveOutput(path, GetFullPath(source), origsource, volume);
-            Formatter.DriveLetter = path;
-            Nullable<bool> dialogResult = Formatter.ShowDialog();
+            var formatter =
+                new FormatFlashDriveOutput(path, GetFullPath(source), origSource, volume)
+                {
+                    DriveLetter = path
+                };
+            formatter.ShowDialog();
 
-            return Formatter.DialogResult ?? false;
+            return formatter.DialogResult ?? false;
         }
         
-        private string ConvertDrive(string SelectedDrive)
+        private static string ConvertDrive(string selectedDrive)
         {
-            if (SelectedDrive == null)
-            {
-                return null;
-            }
-            string[] Temp = SelectedDrive.Split(' ');
+            var temp = selectedDrive?.Split(' ');
 
-            return Temp[0];
+            return temp?[0];
         }
         
         private void UpdateSystemDrives()
         {
-            bool Done = false;
-            while (!Done)
+            var done = false;
+            while (!done)
             {
                 try
                 {
-                    ManagementObjectSearcher ms = new ManagementObjectSearcher("Select * from Win32_LogicalDisk");
-                    ManagementObjectCollection mo = ms.Get();
+                    var ms = new ManagementObjectSearcher("Select * from Win32_LogicalDisk");
+                    var mo = ms.Get();
                     DestinationComboBox.Items.Clear();
 
-                    foreach (string LogicalDrive in Directory.GetLogicalDrives())
+                    foreach (var logicalDrive in Directory.GetLogicalDrives())
                     {
-                        string DrivePlusVolume = LogicalDrive;
-                        foreach (ManagementObject drive in mo)
+                        var drivePlusVolume = logicalDrive;
+                        foreach (var o in mo)
                         {
-                            string Label = null;
-                            if (mo == null) continue;
-                            switch ((uint)drive["DriveType"])
-                            {
-                                case 2:
-                                case 3:
-                                    break;
-                                default:
-                                    continue;
-                            }
-                            if (LogicalDrive != drive["DeviceID"].ToString() + "\\") continue;
-                            try
-                            {
-                                Label = (string)drive["VolumeName"];
-                            }
-                            catch { }
+                            var drive = (ManagementObject) o;
+                            if ((uint) drive["DriveType"] != 2 && (uint) drive["DriveType"] != 3) continue;
+                            if (logicalDrive != drive["DeviceID"] + "\\") continue;
+                            
+                            drivePlusVolume += " " + (string)drive["VolumeName"] ?? string.Empty;
 
-                            DrivePlusVolume += " " + Label;
-
-                            DestinationComboBox.Items.Add(DrivePlusVolume);
+                            DestinationComboBox.Items.Add(drivePlusVolume);
                         }
                     }
-                    Done = true;
+                    done = true;
+                    ms.Dispose();
                 }
-                catch (System.InvalidOperationException) { }
+                catch (InvalidOperationException) { }
             }
         }
 
@@ -189,15 +173,8 @@ namespace Make_USB_Key
         {
             UpdateSystemDrives();
         }
-        private bool NotReady()
-        {
-            if (DestinationComboBox.SelectedItem == null) return true;
 
-            bool notready = ((DestinationComboBox.SelectedItem == null ||
-                    SourceTextBox.Text == ""));
-
-            return notready;
-        }
+        private bool NotReady() => DestinationComboBox.SelectedItem == null || string.IsNullOrWhiteSpace(SourceTextBox.Text);
 
         private void ResetButton_Click(object sender, RoutedEventArgs e)
         {
@@ -206,28 +183,38 @@ namespace Make_USB_Key
 
         private void PathButton_Click(object sender, RoutedEventArgs e)
         {
-            string NewPath = GetFolderPath("Source Path", false);
-            if (NewPath == "") return;
-            SourceTextBox.Text = NewPath;
+            var newPath = GetFolderPath("Source Path", false);
+            if (string.IsNullOrWhiteSpace(newPath))
+            {
+                return;
+            }
+
+            SourceTextBox.Text = newPath;
         }
 
-        private string GetFolderPath(string Description = null, bool NewFolder = true)
+        private static string GetFolderPath(string description = null, bool newFolder = true)
         {
             // Create Folder Dialog object
-            FolderBrowserDialog Folder = new FolderBrowserDialog();
+            var folder = new FolderBrowserDialog();
 
             // Set Folder options
-            if (Description != null) Folder.Description = Description;
-            Folder.ShowNewFolderButton = NewFolder;
+            if (description != null) folder.Description = description;
+            folder.ShowNewFolderButton = newFolder;
 
             // Display Dialog
-            Nullable<DialogResult> Result = Folder.ShowDialog();
+            DialogResult? result = folder.ShowDialog();
 
             // Return selected path
-            if (Result.ToString() == "OK")
-                return Folder.SelectedPath;
+            if (result.ToString() != "OK")
+            {
+                folder.Dispose();
+                return "";
+            }
 
-            return "";
+            var path = folder.SelectedPath;
+            folder.Dispose();
+            return path;
+
         }
     }
 }

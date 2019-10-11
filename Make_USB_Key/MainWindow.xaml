@@ -1,9 +1,9 @@
-﻿<Window x:Class="Make_USB_Key.MainWindow"
+﻿<Window x:Class="MakeUsbKey.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Make_USB_Key"
+        xmlns:local="clr-namespace:MakeUsbKey"
         mc:Ignorable="d"
         Title="Basic USB Key Maker" Height="157.333" Width="403.667" ResizeMode="NoResize">
     <Grid>
